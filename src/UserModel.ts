@@ -11,6 +11,7 @@ import { Optional } from 'sequelize';
 
 export interface UserAttributes {
   id: number;
+  uid: string;
   name: string;
   email: string;
   isVerified: boolean;
@@ -24,6 +25,9 @@ export interface UserCreationAttributes
   tableName: 'users',
 })
 class User extends Model<UserAttributes, UserCreationAttributes> {
+  @Column
+  uid!: string
+  
   @Column
   name!: string;
 
