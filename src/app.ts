@@ -44,10 +44,9 @@ app.get("/", async (req, res) => {
   res.status(200).json(user.toJSON())
 })
 
-//TODO: make this reusable on other services for validation?
 app.post("/", mustAuthorized, async (req, res, next) => {
   let name: string | undefined;
-
+  
   try {
     name = req.body['name']
     if (!name) throw "name missing"
@@ -56,13 +55,13 @@ app.post("/", mustAuthorized, async (req, res, next) => {
      return new EndUserError(3, 422, "name not found", [{name: "name", message: `missing (found ${name}`}]).createResponse(res)
    }
   const decodedIdToken = req.decodedIdToken
-  User.create({
+  const user = await User.create({
     uid: decodedIdToken.uid,
     name: name,
     email: decodedIdToken.email!,
     isVerified: decodedIdToken.email_verified? true : false
   })
-  res.status(201).json("success")
+  res.status(201).json(user.toJSON())
 })
 
 
