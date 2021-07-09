@@ -1,6 +1,3 @@
-```
-git clone --depth=1 --branch=master https://github.com/audipasuatmadi/template-advanced-base-nodets .
-```
-```
-rmdir ./.git
-```
+# Auth Serviec
+## Introduction
+This service is used to populate more user data in addition to Firebase default users data.
