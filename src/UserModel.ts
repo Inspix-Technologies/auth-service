@@ -13,6 +13,9 @@ export interface UserAttributes {
   id: number;
   uid: string;
   name: string;
+  businessName: string;
+  businessType: string;
+  phoneNumber: string;
   email: string;
   isVerified: boolean;
 }
@@ -27,12 +30,21 @@ export interface UserCreationAttributes
 class User extends Model<UserAttributes, UserCreationAttributes> {
   @Column
   uid!: string
+
+  @Column
+  email!: string;
   
   @Column
   name!: string;
 
   @Column
-  email!: string;
+  businessName!: string;
+
+  @Column
+  businessType!: string;
+
+  @Column
+  phoneNumber!: string;
 
   @Column({field: 'is_verified'})
   isVerified!: boolean

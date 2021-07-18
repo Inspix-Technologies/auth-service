@@ -3,13 +3,14 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import cors from 'cors';
 import sequelize from './database/Database';
-import User from './UserModel';
+import User, { UserAttributes, UserCreationAttributes } from './UserModel';
 import { auth } from 'firebase-admin';
 import mustAuthorized from './middlewares/auth-middleware';
 import EndUserError from './errors/EndUserError';
 import TokenError from './errors/TokenError';
 import tokenAuthenticator from './token-authenticator';
 import AuthError from './errors/AuthError';
+import { validateObjectAttributes } from './utils/ObjectHelper';
 
 declare global {
   namespace Express {
@@ -44,24 +45,28 @@ app.get("/", async (req, res) => {
   res.status(200).json(user.toJSON())
 })
 
-app.post("/", mustAuthorized, async (req, res, next) => {
-  let name: string | undefined;
+app.post("/", mustAuthorized, async (req, res) => {
+  const reqBody = req.body as UserCreationAttributes;
   
   try {
-    name = req.body['name']
-    if (!name) throw "name missing"
+    const validationResult = validateObjectAttributes(["name", "businessName", "businessType", "phoneNumber"], reqBody);
+    if (validationResult.length > 0)
+      return new EndUserError(3, 422, "incomplete request body", validationResult.map((val) => ({name: val, message: "missing"}))).createResponse(res);
    } catch (e) {
      console.error(e)
-     return new EndUserError(3, 422, "name not found", [{name: "name", message: `missing (found ${name}`}]).createResponse(res)
+     return new EndUserError(3, 422, "request body empty", [{name: "requestbody", message: `missing`}]).createResponse(res)
    }
   const decodedIdToken = req.decodedIdToken
   const user = await User.create({
     uid: decodedIdToken.uid,
-    name: name,
+    name: reqBody.name,
+    businessName: reqBody.businessName,
+    businessType: reqBody.businessType,
+    phoneNumber: reqBody.phoneNumber,
     email: decodedIdToken.email!,
-    isVerified: decodedIdToken.email_verified? true : false
+    isVerified: false
   })
-  res.status(201).json(user.toJSON())
+  res.status(201).json(user.toJSON());
 })
 
 
