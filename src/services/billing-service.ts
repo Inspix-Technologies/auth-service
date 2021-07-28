@@ -16,6 +16,14 @@ const afterPaymentProxy = createProxyMiddleware({
   onProxyReq: fixRequestBody,
 });
 
+const getProxy = createProxyMiddleware({
+  target: `${process.env.BILLING_SERVICE_ADDRESS!}`,
+  onProxyReq: fixRequestBody,
+  pathRewrite: {
+    '/billing': '/funds',
+  },
+});
+
 billingRouter.post(
   '/request',
   mustAuthorized,
@@ -49,5 +57,6 @@ billingRouter.post(
 );
 
 billingRouter.post('/jz18qknx', afterPaymentProxy);
+billingRouter.get('/', getProxy);
 
 export default billingRouter;
