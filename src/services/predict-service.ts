@@ -12,6 +12,18 @@ predictRouter.post('/', async (req, res) => {
 
   const apiKey = req.headers['inspix-api-key'];
   if (!apiKey) return res.status(404).json({ message: 'api key missing' });
+
+  try {
+    const tempRes = await axios.get(
+      `${process.env.BILLING_SERVICE_ADDRESS!}/apikey/status?apikey=${apiKey}`
+    );
+    if (tempRes.data.isValid === false)
+      return res.status(400).json({ message: 'unauthorized' });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json(e);
+  }
+
   let decryptedKey: { userUid: string };
   try {
     decryptedKey = jwt.verify(
