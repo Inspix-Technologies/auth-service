@@ -13,6 +13,7 @@ import AuthError from './errors/AuthError';
 import { validateObjectAttributes } from './utils/ObjectHelper';
 import billingRouter from './services/billing-service';
 import predictRouter from './services/predict-service';
+import apiKeyRouter from './services/apikey-service';
 
 declare global {
   namespace Express {
@@ -85,5 +86,6 @@ app.post('/', mustAuthorized, async (req, res) => {
 
 app.use('/billing', billingRouter);
 app.use('/predict', predictRouter);
+app.use('/apikey', apiKeyRouter);
 
 export default app;
