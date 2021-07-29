@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import cors from 'cors';
 import sequelize from './database/Database';
-import User, { UserCreationAttributes } from './UserModel';
+import User, { UserAttributes, UserCreationAttributes } from './UserModel';
 import { auth } from 'firebase-admin';
 import mustAuthorized from './middlewares/auth-middleware';
 import EndUserError from './errors/EndUserError';
@@ -14,6 +14,7 @@ import { validateObjectAttributes } from './utils/ObjectHelper';
 import billingRouter from './services/billing-service';
 import predictRouter from './services/predict-service';
 import apiKeyRouter from './services/apikey-service';
+import axios from 'axios';
 
 declare global {
   namespace Express {
@@ -41,13 +42,54 @@ app.get('/', async (req, res) => {
     return TokenError.createClientError(2, 403, 'unauthorized', [
       { name: 'idToken', message: 'unauthorized' },
     ]).createResponse(res);
-  const user = await User.findOne({ where: { uid: decodedToken.uid } });
-  if (!user)
-    return new AuthError(4, 403, 'user data missing', [
-      { name: 'userData', message: 'missing' },
-    ]).createResponse(res);
 
-  res.status(200).json(user.toJSON());
+  const userDataPromise = new Promise<UserAttributes>(
+    async (resolve, reject) => {
+      try {
+        const user = await User.findOne({ where: { uid: decodedToken.uid } });
+        if (!user)
+          return new AuthError(4, 403, 'user data missing', [
+            { name: 'userData', message: 'missing' },
+          ]).createResponse(res);
+        const jsoned = user.toJSON() as UserAttributes;
+        resolve(jsoned);
+      } catch (e) {
+        console.error(e);
+        return new AuthError(4, 403, 'user data missing', [
+          { name: 'userData', message: 'missing' },
+        ]).createResponse(res);
+      }
+    }
+  );
+
+  const userFundsPromise = new Promise<{ funds: number }>(
+    async (resolve, reject) => {
+      try {
+        //TODO: fix this bad request
+        //propose: console.log on /funds?uid=
+        const funds = await axios.get(
+          `${process.env.BILLING_SERVICE_ADDRESS!}/funds?uid=${
+            decodedToken.uid
+          }`
+        );
+        resolve(funds.data);
+      } catch (e) {
+        console.error(e.response);
+        return new AuthError(4, 403, 'funds error', [
+          { name: 'userFunds', message: 'missing' },
+        ]).createResponse(res);
+      }
+    }
+  );
+
+  Promise.all([userDataPromise, userFundsPromise])
+    .then(([userData, userFunds]) => {
+      const user = { ...userData, ...userFunds };
+      res.status(200).json(user);
+    })
+    .catch(() => {
+      res.status(500).json({ message: 'promise error' });
+    });
 });
 
 app.post('/', mustAuthorized, async (req, res) => {
@@ -81,6 +123,16 @@ app.post('/', mustAuthorized, async (req, res) => {
     email: decodedIdToken.email!,
     isVerified: false,
   });
+
+  try {
+    await axios.post(`${process.env.BILLING_SERVICE_ADDRESS!}/funds/init`, {
+      userUid: decodedIdToken.uid,
+    });
+  } catch (e) {
+    console.error(e);
+    // res.status(500).json({message: 'something is wrong with database operation'});
+  }
+
   res.status(201).json(user.toJSON());
 });
 

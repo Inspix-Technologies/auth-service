@@ -6,7 +6,7 @@ const apiKeyServiceProxy = createProxyMiddleware({
   target: process.env.BILLING_SERVICE_ADDRESS!,
   onProxyReq: fixRequestBody,
 });
-
+//TODO: refactor
 apiKeyRouter.use('/', apiKeyServiceProxy);
 
 export default apiKeyRouter;
