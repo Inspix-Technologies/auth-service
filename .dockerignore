@@ -1,0 +1,6 @@
+.git
+.gitignore
+.prettierrc
+LICENSE
+node_modules
+dist
