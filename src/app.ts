@@ -27,8 +27,18 @@ declare global {
 const app = express();
 sequelize.addModels([User]);
 // app.use(cors({ origin: process.env.ORIGIN_HOST!, credentials: true }));
-app.use(async (_, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://dashboard.inspix.tech');
+app.use(async (req, res, next) => {
+  const origin = req.headers['origin'];
+  if (!origin) {
+    return next();
+  }
+  if (
+    ['https://dashboard.inspix.tech', 'http://dashboard.inspix.tech'].includes(
+      origin
+    )
+  ) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader(
     'Access-Control-Allow-Methods',
     'GET, POST, OPTIONS, PUT, PATCH, DELETE'
