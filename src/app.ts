@@ -26,24 +26,41 @@ declare global {
 
 const app = express();
 sequelize.addModels([User]);
-app.use(cors({ origin: process.env.ORIGIN_HOST!, credentials: true }));
+// app.use(cors({ origin: process.env.ORIGIN_HOST!, credentials: true }));
+app.use(async (_, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://dashboard.inspix.tech');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, OPTIONS, PUT, PATCH, DELETE'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-Requested-With,content-type'
+  );
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb' }));
 
 app.get('/test', async (req, res) => {
-  const responsee = await axios.get(process.env.BILLING_SERVICE_ADDRESS!);
-  console.log("tembak");
-  res.status(200).json({message: responsee.data});
-})
+  // const responsee = await axios.get(process.env.BILLING_SERVICE_ADDRESS!);
+  console.log('tembak');
+  res.status(200).json({ message: 'dorr' });
+});
+
+app.post('/somethingg', async (req, res) => {
+  res.json({ message: 'gotcha' }).status(200);
+});
 
 app.get('/kompiang', async (req, res) => {
-  console.log("tembak");
-  res.status(200).json({message: "Success"});
-})
+  console.log('tembak');
+  res.status(200).json({ message: 'Success' });
+});
 
-app.get("/kompiang1", (req, res) => {
-  res.status(200).json({message: 'hello sir! Success'})
-})
+app.get('/kompiang1', (req, res) => {
+  res.status(200).json({ message: 'hello sir! Success' });
+});
 
 app.get('/', async (req, res) => {
   const idToken: string | undefined = req.headers.authorization?.split(' ')[1];
@@ -145,7 +162,9 @@ app.post('/', mustAuthorized, async (req, res) => {
     });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({message: 'something is wrong with database operation'});
+    return res
+      .status(500)
+      .json({ message: 'something is wrong with database operation' });
   }
 
   res.status(201).json(user.toJSON());
