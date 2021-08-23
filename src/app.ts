@@ -29,6 +29,7 @@ sequelize.addModels([User]);
 // app.use(cors({ origin: process.env.ORIGIN_HOST!, credentials: true }));
 app.use(async (req, res, next) => {
   const origin = req.headers['origin'];
+  console.log(origin);
   if (!origin) {
     return next();
   }
@@ -48,6 +49,8 @@ app.use(async (req, res, next) => {
     'X-Requested-With,content-type,authorization,inspix-api-key'
   );
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  console.log("Ayam", res.getHeader('Access-Control-Allow-Origin'));
+  console.log(res.getHeader('Access-Control-Allow-Methods'));
   next();
 });
 app.use(express.json({ limit: '50mb' }));
